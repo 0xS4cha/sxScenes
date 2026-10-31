@@ -19,7 +19,8 @@ local function toNumber(value)
 end
 
 local function toVector(input)
-    if type(input) ~= 'table' then return nil end
+    local kind = type(input)
+    if kind ~= 'table' and kind ~= 'vector3' and kind ~= 'vector4' then return nil end
     local x, y, z = toNumber(input.x), toNumber(input.y), toNumber(input.z)
     if not x or not y or not z then return nil end
     return { x = Utils.Round(x, 3), y = Utils.Round(y, 3), z = Utils.Round(z, 3) }
