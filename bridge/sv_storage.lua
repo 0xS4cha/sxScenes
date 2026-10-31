@@ -126,6 +126,7 @@ function Storage.LoadAll(collection)
 end
 
 function Storage.Save(collection, id, data)
+    Storage.Await()
     if Storage.Name == 'mysql' then
         execute(([[
             INSERT INTO `%s` (`id`, `data`) VALUES (?, ?)
@@ -141,6 +142,7 @@ function Storage.Save(collection, id, data)
 end
 
 function Storage.Delete(collection, id)
+    Storage.Await()
     if Storage.Name == 'mysql' then
         execute(('DELETE FROM `%s` WHERE `id` = ?'):format(TABLES[collection]), { id })
         return
