@@ -45,6 +45,16 @@ Config.Editor = {
 
 Config.Catalog = {
     customModels = true,
+    categories = {
+        { id = 'furniture', keywords = { 'chair', 'couch', 'sofa', 'table', 'bench', 'stool', 'bed', 'lounger', 'seat', 'desk', 'shelf' } },
+        { id = 'lights', keywords = { 'light', 'lamp', 'lantern', 'candle', 'torch' } },
+        { id = 'road', keywords = { 'barrier', 'cone', 'fence', 'sign', 'barrel', 'bollard', 'roadblock', 'sandblock' } },
+        { id = 'nature', keywords = { 'plant', 'bush', 'tree', 'rock', 'flower', 'grass', 'log', 'palm', 'weed' } },
+        { id = 'containers', keywords = { 'box', 'crate', 'pallet', 'bin', 'skip', 'container', 'case', 'bag', 'dumpster', 'trolley' } },
+        { id = 'food', keywords = { 'food', 'beer', 'bottle', 'cup', 'drink', 'burger', 'pizza', 'cake', 'wine', 'cash' } },
+        { id = 'electronics', keywords = { 'tv', 'speaker', 'dj_', 'monitor', 'laptop', 'phone', 'radio', 'console', 'keyboard' } },
+        { id = 'tools', keywords = { 'tool', 'ladder', 'generator', 'drill', 'hammer', 'spanner', 'wrench', 'jack' } },
+    },
     blacklist = {
         'prop_fnclink_02gate1',
         'stt_prop_stunt_track_start',
