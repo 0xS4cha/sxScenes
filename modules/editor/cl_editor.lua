@@ -326,10 +326,6 @@ function SX.Editor:Initialize()
         cb({ ok = true, data = getCatalog() })
     end)
 
-    RegisterNUICallback('getEditorState', function(_, cb)
-        cb({ ok = true, data = session and editorState() or nil })
-    end)
-
     sessionCallback('editorPreview', function(data)
         setPreview(Catalog.NormalizeModel(data.model))
     end)

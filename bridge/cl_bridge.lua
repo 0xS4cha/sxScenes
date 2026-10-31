@@ -11,12 +11,6 @@ function Bridge.Notify(message, kind)
     EndTextCommandThefeedPostTicker(false, true)
 end
 
-function Bridge.ShowHelp(message)
-    BeginTextCommandDisplayHelp("STRING")
-    AddTextComponentSubstringPlayerName(message)
-    EndTextCommandDisplayHelp(0, false, false, -1)
-end
-
 RegisterNetEvent('sxScenes:notify', function(message, kind)
     Bridge.Notify(message, kind)
 end)

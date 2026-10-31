@@ -62,10 +62,6 @@ local function spawn(id, scene)
     end)
 end
 
-local function getScene(id)
-    return localScenes[id] or publicScenes[id]
-end
-
 local function update()
     local coords = GetEntityCoords(PlayerPedId())
     local seen = {}
@@ -121,10 +117,6 @@ end
 
 function SX.Stream:IsShown(id)
     return localScenes[id] ~= nil
-end
-
-function SX.Stream:IsVisible(id)
-    return getScene(id) ~= nil
 end
 
 function SX.Stream:Suppress(id, value)
