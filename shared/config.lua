@@ -67,6 +67,10 @@ Config.Catalog = {
     },
 }
 
+Config.Integrations = {
+    sxIllegals = 'sxIllegals',
+}
+
 Config.ActivityLimit = 100
 
 Config.Webhook = {
