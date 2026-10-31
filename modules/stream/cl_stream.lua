@@ -44,7 +44,7 @@ local function despawn(id)
 end
 
 local function spawn(id, scene)
-    local entry = { entities = {}, version = scene.updated }
+    local entry = { entities = {}, revision = scene.revision }
     spawned[id] = entry
 
     CreateThread(function()
@@ -81,7 +81,7 @@ local function update()
                     despawn(id)
                 elseif not spawned[id] then
                     spawn(id, scene)
-                elseif spawned[id].version ~= scene.updated then
+                elseif spawned[id].revision ~= scene.revision then
                     despawn(id)
                     spawn(id, scene)
                 end

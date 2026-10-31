@@ -96,6 +96,7 @@ local function toClient(scene)
         props = scene.props,
         created = scene.created,
         updated = scene.updated,
+        revision = scene.revision,
     }
 end
 
@@ -115,6 +116,7 @@ end
 
 local function persist(scene)
     scene.updated = os.time()
+    scene.revision = (scene.revision or 0) + 1
     Storage.Save('scenes', scene.id, scene)
 end
 
