@@ -54,7 +54,7 @@ function SanitizeProps(input)
     if type(input) ~= 'table' then return nil, 'invalid_data' end
 
     local props = {}
-    for _, entry in pairs(input) do
+    for _, entry in ipairs(input) do
         if type(entry) ~= 'table' then return nil, 'invalid_data' end
 
         local model = Catalog.NormalizeModel(entry.model)
