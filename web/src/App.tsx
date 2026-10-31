@@ -3,6 +3,7 @@ import { NuiWrapper } from './components/NuiWrapper'
 import { MOCK_EDITOR } from './data/mockScenes'
 import { useNuiEvent } from './hooks/useNuiEvent'
 import { GizmoOverlay } from './overlays/GizmoOverlay'
+import { AdminPanel } from './pages/admin/Index'
 import { EditorPage } from './pages/editor/Index'
 import { ScenesPage } from './pages/scenes/Index'
 import type { PanelRoute, SetRouteData, SetVisibleData } from './types/nui'
@@ -12,7 +13,7 @@ import { fetchNui } from './utils/fetchNui'
 import { normalizeEditor } from './utils/list'
 import { isEnvBrowser } from './utils/nui'
 
-const ROUTES: PanelRoute[] = ['scenes', 'editor']
+const ROUTES: PanelRoute[] = ['scenes', 'editor', 'admin']
 
 const ignoreEscape = () => {}
 
@@ -59,9 +60,10 @@ export default function App() {
 
   return (
     <>
-      <NuiWrapper visible={visible} side onEscape={route === 'editor' ? ignoreEscape : undefined}>
+      <NuiWrapper visible={visible} side={route !== 'admin'} onEscape={route === 'editor' ? ignoreEscape : undefined}>
         {route === 'scenes' && <ScenesPage openCount={openCount} />}
         {route === 'editor' && editor && <EditorPage state={editor} onState={setEditor} />}
+        {route === 'admin' && <AdminPanel openCount={openCount} />}
       </NuiWrapper>
       <GizmoOverlay />
     </>
