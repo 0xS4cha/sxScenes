@@ -109,7 +109,7 @@ local function broadcast(scene, previous)
     if scene and scene.public and Config.Public.enabled then
         TriggerClientEvent('sxScenes:sync', -1, toClient(scene))
     elseif previous then
-        TriggerClientEvent('sxScenes:remove', -1, previous)
+        TriggerClientEvent('sxScenes:unpublish', -1, previous)
     end
 end
 
