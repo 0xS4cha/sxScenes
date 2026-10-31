@@ -58,12 +58,17 @@ local function sendOverlay()
     })
 end
 
+local pressed = {}
+
 local function pressGizmo(command)
     if not state.active then return end
+    pressed[command] = true
     ExecuteCommand('+' .. command)
 end
 
 local function releaseGizmo(command)
+    if not pressed[command] then return end
+    pressed[command] = nil
     ExecuteCommand('-' .. command)
 end
 
