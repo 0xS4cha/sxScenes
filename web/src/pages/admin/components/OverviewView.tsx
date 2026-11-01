@@ -29,6 +29,7 @@ export function OverviewView({ counts, stats, settings, activity, onSelect }: Ov
     { key: 'overview_rule_sharing', enabled: settings.sharing },
     { key: 'overview_rule_custom', enabled: settings.customModels },
     { key: 'overview_rule_groups', enabled: settings.groups },
+    { key: 'overview_rule_territories', enabled: settings.territories },
   ]
 
   return (

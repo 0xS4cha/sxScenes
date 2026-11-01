@@ -55,6 +55,7 @@ export const MOCK_SCENES: ScenesData = {
       public: true,
       center: { x: 85.2, y: -1959.4, z: 21.1 },
       group: { id: '3', name: 'Ballas', color: 'rgb(147, 51, 234)' },
+      territory: { id: '1', label: 'Grove Street' },
       permissions: { view: true, edit: true, publish: true, delete: false },
       props: [
         { model: 'prop_rub_couch01', coords: { x: 85.2, y: -1959.4, z: 21.1 }, rotation: { x: 0, y: 0, z: 0 } },

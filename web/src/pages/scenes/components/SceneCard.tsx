@@ -1,4 +1,4 @@
-import { Copy, Eye, EyeOff, Globe, Lock, Pencil, Trash2, Users } from 'lucide-react'
+import { Copy, Eye, EyeOff, Flag, Globe, Lock, Pencil, Trash2, Users } from 'lucide-react'
 import { Badge, IconButton } from '../../../components/ui'
 import { useTranslation } from '../../../hooks/useTranslation'
 import type { Scene } from '../../../types/scenes'
@@ -50,6 +50,7 @@ export function SceneCard({ scene, shown, canPublish, sharing, confirmPending, o
             <Badge icon={<Lock className="h-3 w-3" />}>{t('scene_private')}</Badge>
           )}
           {shown && <Badge tone="success" icon={<Eye className="h-3 w-3" />}>{t('scene_shown')}</Badge>}
+          {scene.territory && <Badge tone="warning" icon={<Flag className="h-3 w-3" />} title={t('scene_territory_hint')}>{scene.territory.label}</Badge>}
         </div>
       </div>
 

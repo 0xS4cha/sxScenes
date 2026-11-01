@@ -1,4 +1,4 @@
-import { Download, Eraser, Globe, History, Layers, Pencil, Trash2 } from 'lucide-react'
+import { Download, Eraser, Flag, Globe, History, Layers, Pencil, Trash2 } from 'lucide-react'
 import { useTranslation } from '../../../hooks/useTranslation'
 import type { ActivityEntry } from '../../../types/admin'
 import { formatRelativeTime } from '../../../utils/format'
@@ -13,6 +13,7 @@ const ICONS: Record<string, typeof Layers> = {
   admin_delete: Trash2,
   admin_publish: Globe,
   admin_clear: Eraser,
+  territory_lost: Flag,
 }
 
 const SEVERITY: Record<ActivityEntry['severity'], string> = {

@@ -27,6 +27,7 @@ const EMPTY: AdminData = {
     customModels: false,
     everyoneCanCreate: false,
     groups: false,
+    territories: false,
   },
 }
 

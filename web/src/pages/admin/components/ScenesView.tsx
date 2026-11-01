@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Box, Eye, EyeOff, Globe, Layers, Lock, MapPin, Pencil, Trash2, User, Users } from 'lucide-react'
+import { Box, Eye, EyeOff, Flag, Globe, Layers, Lock, MapPin, Pencil, Trash2, User, Users } from 'lucide-react'
 import { Badge, EmptyState, IconButton } from '../../../components/ui'
 import { useConfirm } from '../../../hooks/useConfirm'
 import { useTranslation } from '../../../hooks/useTranslation'
@@ -34,7 +34,7 @@ export function ScenesView({ scenes, shown, publicEnabled, groupsEnabled, search
     if (filter === 'private' && scene.public) return false
     if (filter === 'group' && !scene.group) return false
     if (!query) return true
-    return [scene.label, scene.id, scene.ownerName, scene.owner, scene.group?.name].some((value) => value?.toLowerCase().includes(query))
+    return [scene.label, scene.id, scene.ownerName, scene.owner, scene.group?.name, scene.territory?.label].some((value) => value?.toLowerCase().includes(query))
   })
 
   return (
@@ -81,6 +81,7 @@ export function ScenesView({ scenes, shown, publicEnabled, groupsEnabled, search
                     </span>
                   )}
                   <Badge tone="violet" icon={<User className="h-3 w-3" />} title={scene.owner}>{scene.ownerName}</Badge>
+                  {scene.territory && <Badge tone="warning" icon={<Flag className="h-3 w-3" />}>{scene.territory.label}</Badge>}
                   <Badge icon={<Box className="h-3 w-3" />}>{t('scene_props_count', { n: scene.props })}</Badge>
                   {isShown && <Badge tone="success" icon={<Eye className="h-3 w-3" />}>{t('scene_shown')}</Badge>}
                 </div>

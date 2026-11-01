@@ -17,6 +17,11 @@ export interface SceneGroup {
   color?: string
 }
 
+export interface SceneTerritory {
+  id: string
+  label: string
+}
+
 export interface ScenePermissions {
   view: boolean
   edit: boolean
@@ -32,6 +37,7 @@ export interface Scene {
   center: Vec3
   props: SceneProp[]
   group?: SceneGroup | null
+  territory?: SceneTerritory | null
   permissions?: ScenePermissions
   created?: number
   updated?: number

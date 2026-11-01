@@ -76,6 +76,8 @@ AddLanguage("fr", {
     scenes_group_empty = "Votre groupe n'a encore aucune scène.",
     scenes_filter_group = "Groupes",
     scene_created_by = "par {name}",
+    scene_territory_hint = "Seul le groupe qui contrôle ce territoire peut la rendre publique",
+    overview_rule_territories = "Décor de territoire",
     overview_rule_groups = "Groupes sxIllegals",
     scenes_search = "Rechercher par nom, code ou propriétaire",
     scenes_filter_all = "Toutes",
