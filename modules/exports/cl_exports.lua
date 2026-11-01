@@ -40,6 +40,10 @@ exports("GetSceneEntities", function(id)
     return SX.Stream:GetEntities(id)
 end)
 
+exports("GetCurrentBucket", function()
+    return GetCurrentBucket()
+end)
+
 exports("UseGizmo", function(entity)
     local confirmed = SX.Gizmo:Edit(entity)
     if not DoesEntityExist(entity) then return confirmed end
