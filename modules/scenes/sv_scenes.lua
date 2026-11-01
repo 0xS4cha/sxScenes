@@ -613,6 +613,16 @@ function SX.Scenes:Initialize()
         onTerritoryLost(territoryId, previousOwner, newOwner)
     end)
 
+    AddEventHandler('sxIllegals:territoryCreated', function()
+        Bridge.ClearTerritoryCache()
+        RefreshSceneTerritories()
+    end)
+
+    AddEventHandler('sxIllegals:territoryUpdated', function()
+        Bridge.ClearTerritoryCache()
+        RefreshSceneTerritories()
+    end)
+
     AddEventHandler('onResourceStart', function(resource)
         if resource ~= Config.Integrations.sxIllegals then return end
         Bridge.ResetIllegalsProbes()
@@ -620,6 +630,7 @@ function SX.Scenes:Initialize()
         CreateThread(function()
             Wait(2000)
             RegisterScenePermissions()
+            RefreshSceneTerritories()
         end)
     end)
 
@@ -647,6 +658,23 @@ function SX.Scenes:Initialize()
         if resource ~= GetCurrentResourceName() then return end
         Storage.Flush()
     end)
+end
+
+function RefreshSceneTerritories()
+    if not territoriesEnabled() then return 0 end
+
+    local changed = 0
+    for id, scene in pairs(Scenes) do
+        local territory = #scene.props > 0 and GetTerritoryAt(scene.center) or nil
+        local territoryId = territory and territory.id or nil
+        if territoryId ~= scene.territory or (territory and territory.label ~= scene.territoryLabel) then
+            UpdateScene(id, { territory = territory or false })
+            changed = changed + 1
+        end
+    end
+
+    if changed > 0 then Logger:info('SCENES', ('Updated the territory of %d scene(s)'):format(changed)) end
+    return changed
 end
 
 local function syncBuckets()
@@ -687,6 +715,7 @@ function SX.Scenes:InitializeAsync()
 
     if Bridge.HasIllegals() then
         RegisterScenePermissions()
+        RefreshSceneTerritories()
     end
     TriggerClientEvent('sxScenes:refresh', -1)
 end

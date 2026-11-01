@@ -199,6 +199,13 @@ end
 function Bridge.GetTerritoryAt(coords)
     if not coords then return nil end
 
+    if probeIllegals('GetTerritoryAtCoords', vector3(0.0, 0.0, 0.0)) then
+        local id = callIllegals('GetTerritoryAtCoords', vector3(coords.x, coords.y, coords.z))
+        if not id then return nil end
+        local territory = callIllegals('GetTerritory', id)
+        return { id = tostring(id), label = territory and territory.label or tostring(id) }
+    end
+
     for _, territory in ipairs(getTerritories()) do
         if isInsidePolygon(coords, territory.coords) then
             return { id = tostring(territory.id), label = territory.label or tostring(territory.id) }
