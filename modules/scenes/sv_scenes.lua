@@ -95,6 +95,7 @@ local function toClient(scene)
         public = scene.public,
         center = scene.center,
         props = scene.props,
+        group = scene.group and { id = scene.group, name = scene.groupName or scene.group, color = scene.groupColor } or nil,
         created = scene.created,
         updated = scene.updated,
         revision = scene.revision,
@@ -129,15 +130,43 @@ function GetScenes()
     return Scenes
 end
 
+local function sortByCreation(list)
+    table.sort(list, function(a, b) return (a.created or 0) < (b.created or 0) end)
+    return list
+end
+
 function GetOwnerScenes(identifier)
     local list = {}
     for _, scene in pairs(Scenes) do
-        if scene.owner == identifier then
+        if scene.owner == identifier and not scene.group then
             list[#list + 1] = scene
         end
     end
-    table.sort(list, function(a, b) return (a.created or 0) < (b.created or 0) end)
-    return list
+    return sortByCreation(list)
+end
+
+function GetGroupScenes(groupId)
+    local list = {}
+    if not groupId then return list end
+    groupId = tostring(groupId)
+    for _, scene in pairs(Scenes) do
+        if scene.group == groupId then
+            list[#list + 1] = scene
+        end
+    end
+    return sortByCreation(list)
+end
+
+local function applyGroup(scene, group)
+    if group then
+        scene.group = tostring(group.id)
+        scene.groupName = group.name
+        scene.groupColor = group.color
+    else
+        scene.group = nil
+        scene.groupName = nil
+        scene.groupColor = nil
+    end
 end
 
 function CountPublicScenes()
@@ -165,6 +194,7 @@ function CreateScene(data)
         center = center or Utils.ToCoords(data.center) or { x = 0.0, y = 0.0, z = 0.0 },
         created = os.time(),
     }
+    applyGroup(scene, data.group)
 
     Scenes[scene.id] = scene
     persist(scene)
@@ -199,6 +229,9 @@ function UpdateScene(id, data)
     if data.public ~= nil then
         scene.public = data.public == true and Config.Public.enabled
     end
+    if data.group ~= nil then
+        applyGroup(scene, data.group or nil)
+    end
 
     persist(scene)
     broadcast(scene, wasPublic and not scene.public and scene.id or nil)
@@ -229,13 +262,45 @@ local function onCooldown(source)
     return false
 end
 
-local function canManage(source, scene)
-    return scene.owner == Bridge.GetIdentifier(source) or Bridge.IsAdmin(source)
-end
-
 local function canPublish(source)
     if not Config.Public.enabled then return false end
     return Config.Public.playersCanPublish or Bridge.IsAdmin(source)
+end
+
+local function groupsEnabled()
+    return Config.Groups.enabled and Bridge.HasIllegals()
+end
+
+local function playerGroup(source)
+    if not groupsEnabled() then return nil, nil end
+    return Bridge.GetIllegalGroup(source)
+end
+
+function GetScenePermissions(source, scene)
+    if Bridge.IsAdmin(source) then
+        return { view = true, edit = true, publish = Config.Public.enabled, delete = true }
+    end
+
+    if not scene.group then
+        local owner = scene.owner == Bridge.GetIdentifier(source)
+        return { view = owner, edit = owner, publish = owner and canPublish(source), delete = owner }
+    end
+
+    local group, grade = playerGroup(source)
+    if not group or group.id ~= scene.group then
+        return { view = false, edit = false, publish = false, delete = false }
+    end
+
+    return {
+        view = true,
+        edit = grade <= Config.Groups.editGrade,
+        publish = grade <= Config.Groups.publishGrade and canPublish(source),
+        delete = grade <= Config.Groups.deleteGrade,
+    }
+end
+
+local function canManage(source, scene)
+    return GetScenePermissions(source, scene).edit
 end
 
 local function isNear(source, scene)
@@ -252,14 +317,42 @@ local function playerCallback(name, handler)
     end)
 end
 
+local function withPermissions(source, scene)
+    local data = toClient(scene)
+    data.permissions = GetScenePermissions(source, scene)
+    return data
+end
+
+local function groupData(source)
+    local group, grade = playerGroup(source)
+    if not group then return { available = groupsEnabled() } end
+
+    return {
+        available = true,
+        group = group,
+        grade = grade,
+        canCreate = grade <= Config.Groups.createGrade and Bridge.CanCreate(source),
+        count = #GetGroupScenes(group.id),
+        limit = Config.Groups.scenes,
+    }
+end
+
 local function playerData(source)
     local identifier = Bridge.GetIdentifier(source)
     local list = {}
     for _, scene in ipairs(GetOwnerScenes(identifier)) do
-        list[#list + 1] = toClient(scene)
+        list[#list + 1] = withPermissions(source, scene)
+    end
+
+    local groups = groupData(source)
+    if groups.group then
+        for _, scene in ipairs(GetGroupScenes(groups.group.id)) do
+            list[#list + 1] = withPermissions(source, scene)
+        end
     end
 
     return {
+        groups = groups,
         ok = true,
         scenes = list,
         canCreate = Bridge.CanCreate(source),
@@ -281,6 +374,19 @@ local function ownsTooMany(source)
     return #GetOwnerScenes(Bridge.GetIdentifier(source)) >= Config.Limits.scenes
 end
 
+local function resolveTarget(source, asGroup)
+    if not asGroup then
+        if ownsTooMany(source) then return nil, 'scene_limit' end
+        return false
+    end
+
+    local group, grade = playerGroup(source)
+    if not group then return nil, 'no_group' end
+    if grade > Config.Groups.createGrade then return nil, 'no_permission' end
+    if not Bridge.IsAdmin(source) and #GetGroupScenes(group.id) >= Config.Groups.scenes then return nil, 'group_scene_limit' end
+    return group
+end
+
 function SX.Scenes:Initialize()
     RegisterServerCallback('sxScenes:getPublic', function()
         local list = {}
@@ -299,24 +405,26 @@ function SX.Scenes:Initialize()
 
     RegisterServerCallback('sxScenes:getScene', function(source, id)
         local scene = Scenes[id]
-        if not scene or not (scene.public or canManage(source, scene)) then return respond(false, 'not_found') end
+        if not scene or not (scene.public or GetScenePermissions(source, scene).view) then return respond(false, 'not_found') end
         return respond(true, toClient(scene))
     end)
 
-    playerCallback('sxScenes:create', function(source, label)
+    playerCallback('sxScenes:create', function(source, label, asGroup)
         if not Bridge.CanCreate(source) then return respond(false, 'no_permission') end
-        if ownsTooMany(source) then return respond(false, 'scene_limit') end
+        local group, targetErr = resolveTarget(source, asGroup == true)
+        if group == nil then return respond(false, targetErr) end
 
         local scene, err = CreateScene({
             label = label,
             owner = Bridge.GetIdentifier(source),
             ownerName = Bridge.GetPlayerName(source),
             center = playerCoords(source),
+            group = group or nil,
         })
         if not scene then return respond(false, err) end
 
-        Activity.Add('scene_created', source, { name = scene.label, id = scene.id })
-        return respond(true, toClient(scene))
+        Activity.Add('scene_created', source, { name = scene.label, id = scene.id, group = scene.groupName })
+        return respond(true, withPermissions(source, scene))
     end)
 
     playerCallback('sxScenes:save', function(source, id, payload)
@@ -330,34 +438,34 @@ function SX.Scenes:Initialize()
         if not updated then return respond(false, err) end
 
         Activity.Add('scene_updated', source, { name = updated.label, id = updated.id, props = #updated.props })
-        return respond(true, toClient(updated))
+        return respond(true, withPermissions(source, updated))
     end)
 
     playerCallback('sxScenes:setPublic', function(source, id, public)
         local scene = Scenes[id]
         if not scene then return respond(false, 'not_found') end
-        if not canManage(source, scene) then return respond(false, 'no_permission') end
-        if not canPublish(source) then return respond(false, 'no_permission') end
+        if not GetScenePermissions(source, scene).publish then return respond(false, 'no_permission') end
 
         local updated = UpdateScene(id, { public = public == true })
         Activity.Add(updated.public and 'scene_published' or 'scene_unpublished', source, { name = updated.label, id = updated.id })
-        return respond(true, toClient(updated))
+        return respond(true, withPermissions(source, updated))
     end)
 
     playerCallback('sxScenes:delete', function(source, id)
         local scene = Scenes[id]
         if not scene then return respond(false, 'not_found') end
-        if not canManage(source, scene) then return respond(false, 'no_permission') end
+        if not GetScenePermissions(source, scene).delete then return respond(false, 'no_permission') end
 
         DeleteScene(id)
         Activity.Add('scene_deleted', source, { name = scene.label, id = scene.id })
         return respond(true)
     end)
 
-    playerCallback('sxScenes:import', function(source, code)
+    playerCallback('sxScenes:import', function(source, code, asGroup)
         if not Config.Sharing then return respond(false, 'no_permission') end
         if not Bridge.CanCreate(source) then return respond(false, 'no_permission') end
-        if ownsTooMany(source) then return respond(false, 'scene_limit') end
+        local group, targetErr = resolveTarget(source, asGroup == true)
+        if group == nil then return respond(false, targetErr) end
 
         code = Utils.Trim(type(code) == 'string' and code or ''):upper()
         local original = Scenes[code] or Scenes['SCN-' .. code]
@@ -369,15 +477,26 @@ function SX.Scenes:Initialize()
             ownerName = Bridge.GetPlayerName(source),
             props = Utils.DeepCopy(original.props),
             center = original.center,
+            group = group or nil,
         })
         if not scene then return respond(false, err) end
 
-        Activity.Add('scene_imported', source, { name = scene.label, id = scene.id, from = original.id })
-        return respond(true, toClient(scene))
+        Activity.Add('scene_imported', source, { name = scene.label, id = scene.id, from = original.id, group = scene.groupName })
+        return respond(true, withPermissions(source, scene))
     end)
 
     AddEventHandler('playerDropped', function()
         cooldowns[source] = nil
+    end)
+
+    AddEventHandler('sxIllegals:groupDeleted', function(groupId)
+        for _, scene in ipairs(GetGroupScenes(groupId)) do
+            if Config.Groups.onGroupDeleted == 'delete' then
+                DeleteScene(scene.id)
+            else
+                UpdateScene(scene.id, { group = false, public = false })
+            end
+        end
     end)
 
     AddEventHandler('onResourceStop', function(resource)

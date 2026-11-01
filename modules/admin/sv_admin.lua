@@ -21,6 +21,7 @@ local function listScenes()
             public = scene.public,
             center = scene.center,
             props = #scene.props,
+            group = scene.group and { id = scene.group, name = scene.groupName or scene.group, color = scene.groupColor } or nil,
             created = scene.created,
             updated = scene.updated,
         }
@@ -90,6 +91,7 @@ function SX.Admin:Initialize()
                 sharing = Config.Sharing,
                 customModels = Config.Catalog.customModels,
                 everyoneCanCreate = Config.Creator.everyone,
+                groups = Config.Groups.enabled and Bridge.HasIllegals(),
             },
         }
     end)

@@ -71,6 +71,16 @@ Config.Integrations = {
     sxIllegals = 'sxIllegals',
 }
 
+Config.Groups = {
+    enabled = true,
+    scenes = 5,
+    createGrade = 1,
+    editGrade = 2,
+    publishGrade = 1,
+    deleteGrade = 0,
+    onGroupDeleted = 'owner',
+}
+
 Config.ActivityLimit = 100
 
 Config.Webhook = {

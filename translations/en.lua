@@ -35,6 +35,8 @@ AddLanguage("en", {
     error_too_spread = "Props must stay close to each other.",
     error_too_far = "You are too far from this scene.",
     error_public_disabled = "Public scenes are disabled on this server.",
+    error_no_group = "You are not in a group.",
+    error_group_scene_limit = "Your group reached its maximum number of scenes.",
     time_just_now = "just now",
     time_minutes_ago = "{n} min ago",
     time_hours_ago = "{n} h ago",

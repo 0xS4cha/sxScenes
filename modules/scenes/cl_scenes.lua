@@ -52,11 +52,11 @@ function SX.Scenes:Initialize()
     end)
 
     RegisterNUICallback('sceneCreate', function(data, cb)
-        cb(serverCall('sxScenes:create', data and data.label))
+        cb(serverCall('sxScenes:create', data and data.label, data and data.group == true))
     end)
 
     RegisterNUICallback('sceneImport', function(data, cb)
-        cb(serverCall('sxScenes:import', data and data.code))
+        cb(serverCall('sxScenes:import', data and data.code, data and data.group == true))
     end)
 
     RegisterNUICallback('sceneDelete', function(data, cb)

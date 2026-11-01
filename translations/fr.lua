@@ -35,6 +35,8 @@ AddLanguage("fr", {
     error_too_spread = "Les props doivent rester proches les uns des autres.",
     error_too_far = "Vous êtes trop loin de cette scène.",
     error_public_disabled = "Les scènes publiques sont désactivées sur ce serveur.",
+    error_no_group = "Vous n'êtes dans aucun groupe.",
+    error_group_scene_limit = "Votre groupe a atteint son nombre maximum de scènes.",
     time_just_now = "à l'instant",
     time_minutes_ago = "il y a {n} min",
     time_hours_ago = "il y a {n} h",
