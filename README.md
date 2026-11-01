@@ -9,7 +9,10 @@ A prop scene builder for **ESX or standalone** FiveM servers. Players build scen
 - **Gizmo**: move and rotation modes, world or local axes, ground snapping, hold the right mouse button to look around, confirm or cancel to restore the previous position.
 - **Catalog**: more than 2500 props sorted in categories by keyword, a search field and a live preview spinning in front of the player before placing it. Custom model names can be allowed or not, and models can be blacklisted.
 - **Visibility**: a private scene is only shown to its owner when they choose to show it. A public scene is streamed to every player within `Config.Stream.distance`, props are spawned locally so the network is never touched.
-- **Sharing codes**: every scene has a code like `SCN-K2P9QA`. Importing a code copies the scene into your own scenes.
+- **Sharing codes**: every scene has a code like `SCN-K2P9QA`. Importing a code copies the scene into your own scenes or into your group.
+- **Group scenes**: with [sxIllegals](https://github.com/0xS4cha/sxIllegals), a criminal group owns its own scenes with its own limit. Members edit, publish and delete them depending on their grade.
+- **Territory decor**: a scene standing in an sxIllegals territory can only be made public by the group that controls it. When the group loses the territory after a war or by decay, its public scenes there are made private, given to the new owner or destroyed, and the group gets an alert.
+- **Instances**: a scene belongs to the routing bucket it was created in and is only streamed to the players of that bucket. Admins can move a scene to their own instance.
 - **Admin panel**: overview, every scene of the server with search and filters, show, edit, publish, teleport to or delete any scene, online players with their scenes, delete all the scenes of a player, activity feed.
 - **Server checks**: models, limits, distance between the props and distance between the player and the scene are checked by the server before saving.
 - **Discord logs**: optional webhook for created, imported, published and deleted scenes and admin actions.
@@ -25,6 +28,7 @@ None are required.
 | --- | --- |
 | [es_extended](https://github.com/esx-framework/esx_core) | Optional. Identifiers, names and admin groups |
 | [oxmysql](https://github.com/overextended/oxmysql) | Optional. Database storage, otherwise data is saved in `data/scenes.json` |
+| [sxIllegals](https://github.com/0xS4cha/sxIllegals) | Optional. Group scenes and territory decor |
 
 The server should run with OneSync so it can check the distance between the players and their scenes.
 
@@ -101,6 +105,19 @@ Everything lives in `shared/config.lua`.
 | `Config.Public.enabled` | `true` | Allows public scenes |
 | `Config.Public.playersCanPublish` | `true` | Players can publish their scenes, otherwise only admins can |
 | `Config.Sharing` | `true` | Allows importing a scene from its code |
+| `Config.Integrations.sxIllegals` | `'sxIllegals'` | Resource name of sxIllegals, `false` to disable the groups and territories |
+| `Config.Groups.enabled` | `true` | Allows group scenes |
+| `Config.Groups.scenes` | `5` | Scenes per group |
+| `Config.Groups.createGrade` | `1` | Highest sxIllegals rank allowed to create or import group scenes, `0` being the boss |
+| `Config.Groups.editGrade` | `2` | Highest rank allowed to edit them, every member can show them |
+| `Config.Groups.publishGrade` | `1` | Highest rank allowed to make them public or private |
+| `Config.Groups.deleteGrade` | `0` | Highest rank allowed to delete them |
+| `Config.Groups.onGroupDeleted` | `'owner'` | `'owner'` gives the scenes back to their creator as private scenes, `'delete'` removes them |
+| `Config.Territories.enabled` | `true` | Ties the scenes to the territory their center stands in |
+| `Config.Territories.requireOwner` | `true` | Only the group controlling a territory can make a scene public in it. Unclaimed territories stay open |
+| `Config.Territories.onLoss` | `'hide'` | What happens to the public scenes of a group losing a territory: `'hide'`, `'transfer'`, `'delete'` or `'keep'` |
+| `Config.Buckets.enabled` | `true` | Streams the scenes only to the routing bucket they belong to |
+| `Config.Buckets.interval` | `1000` | Milliseconds between two checks of the players routing buckets |
 | `Config.Stream.distance` | `150.0` | Distance at which the scenes are spawned |
 | `Config.Stream.interval` | `1000` | Milliseconds between two streaming checks |
 | `Config.Editor` | | Distance of the preview and of a placed prop in front of the player |
@@ -139,6 +156,10 @@ translations/   Language files, used by Lua and by the interface
 web/            React, TypeScript and Tailwind interface
 ```
 
+With sxIllegals, a scene either belongs to its creator or to a group. Permissions of group scenes are read live from the sxIllegals ranks, so a kicked member loses access at once. The territory of a scene is computed from its center every time its props are saved, and the public scenes of a territory follow the `sxIllegals:territoryCaptured` and `sxIllegals:territoryLostByDecay` events.
+
+The routing bucket of every player is copied into the `sxScenesBucket` state bag, so the clients only spawn the public scenes of their own instance. A scene can only be saved from its instance, except by admins.
+
 The server owns every scene. While editing, the props only exist on the editing client; saving sends the models, positions, rotations and collisions to the server, which checks the models, the limits, the spread of the props and the distance of the player before storing the scene. Public scenes are then sent to every client, which spawns them locally, frozen and invincible, when the player gets close and deletes them when they leave. A scene is stored under its code in the `sx_scenes` table or in `data/scenes.json`.
 
 ## Exports
@@ -150,7 +171,12 @@ The server owns every scene. While editing, the props only exist on the editing 
 | `GetScene(id)` | `table` | Id, label, owner, visibility, center and props of a scene |
 | `GetScenes()` | `table[]` | Every scene |
 | `GetPlayerScenes(target)` | `table[]` | Scenes of a player server id or an identifier |
-| `CreateScene(owner, label, props?, public?)` | `string, error?` | Creates a scene for a player server id or an identifier and returns its id |
+| `CreateScene(owner, label, props?, public?, options?)` | `string, error?` | Creates a scene for a player server id or an identifier and returns its id. `options` takes a `group` id and a `bucket` |
+| `GetGroupScenes(groupId)` | `table[]` | Scenes of an sxIllegals group |
+| `SetSceneGroup(id, groupId?)` | `boolean, error?` | Gives a scene to a group, or back to its creator without `groupId` |
+| `SetSceneBucket(id, bucket)` | `boolean, error?` | Moves a scene to another routing bucket |
+| `GetSceneTerritory(id)` | `table` | Id and label of the territory of a scene |
+| `GetScenePermissions(source, id)` | `table` | `view`, `edit`, `publish` and `delete` for a player |
 | `UpdateScene(id, data)` | `boolean, error?` | Changes the `label`, `props` or `public` field of a scene |
 | `SetScenePublic(id, public)` | `boolean, error?` | |
 | `DeleteScene(id)` | `boolean` | |
@@ -177,6 +203,7 @@ local id = exports.sxScenes:CreateScene(source, "Checkpoint", {
 | `StopEditing()` | Leaves the editor without saving |
 | `ShowScene(id)` / `HideScene(id)` | Shows or hides a scene around the player |
 | `GetSceneEntities(id)` | Entities of a spawned scene |
+| `GetCurrentBucket()` | Routing bucket of the local player |
 | `UseGizmo(entity)` | Edits any entity with the gizmo, returns `confirmed, coords, rotation` |
 
 ```lua
