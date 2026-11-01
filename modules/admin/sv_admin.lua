@@ -23,6 +23,7 @@ local function listScenes()
             props = #scene.props,
             group = scene.group and { id = scene.group, name = scene.groupName or scene.group, color = scene.groupColor } or nil,
             territory = scene.territory and { id = scene.territory, label = scene.territoryLabel or scene.territory } or nil,
+            bucket = scene.bucket or 0,
             created = scene.created,
             updated = scene.updated,
         }
@@ -94,6 +95,7 @@ function SX.Admin:Initialize()
                 everyoneCanCreate = Config.Creator.everyone,
                 groups = Config.Groups.enabled and Bridge.HasIllegals(),
                 territories = Config.Territories.enabled and Bridge.HasIllegals(),
+                buckets = Config.Buckets.enabled,
             },
         }
     end)
@@ -105,6 +107,15 @@ function SX.Admin:Initialize()
         local scene = UpdateScene(id, { public = public == true })
         Activity.Add('admin_publish', source, { name = scene.label, id = scene.id, public = tostring(scene.public) })
         return { ok = true }
+    end)
+
+    adminCallback('sxScenes:admin:moveBucket', function(source, id)
+        if not GetScene(id) then return { ok = false, error = 'not_found' } end
+
+        local bucket = GetPlayerRoutingBucket(source) or 0
+        local scene = UpdateScene(id, { bucket = bucket })
+        Activity.Add('admin_bucket', source, { name = scene.label, id = scene.id, bucket = bucket })
+        return { ok = true, data = { bucket = bucket } }
     end)
 
     adminCallback('sxScenes:admin:delete', function(source, id)

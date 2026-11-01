@@ -15,6 +15,7 @@ local SEVERITY = {
     admin_publish = 'warning',
     admin_clear = 'warning',
     territory_lost = 'warning',
+    admin_bucket = 'warning',
 }
 
 local COLORS = { info = 3447003, success = 5763719, warning = 16705372 }

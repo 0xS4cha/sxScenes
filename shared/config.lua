@@ -33,6 +33,11 @@ Config.Public = {
 
 Config.Sharing = true
 
+Config.Buckets = {
+    enabled = true,
+    interval = 1000,
+}
+
 Config.Stream = {
     distance = 150.0,
     interval = 1000,
@@ -103,5 +108,6 @@ Config.Webhook = {
         admin_publish = true,
         admin_clear = true,
         territory_lost = true,
+        admin_bucket = false,
     },
 }

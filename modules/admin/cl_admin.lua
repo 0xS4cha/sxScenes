@@ -49,6 +49,10 @@ function SX.Admin:Initialize()
         cb(result)
     end)
 
+    RegisterNUICallback('adminMoveBucket', function(data, cb)
+        cb(adminCall('sxScenes:admin:moveBucket', data and data.id))
+    end)
+
     RegisterNUICallback('adminClearOwner', function(data, cb)
         cb(adminCall('sxScenes:admin:clearOwner', data and data.identifier))
     end)

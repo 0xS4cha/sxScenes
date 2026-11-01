@@ -6,6 +6,14 @@ local localScenes = {}
 local suppressed = {}
 local spawned = {}
 
+function GetCurrentBucket()
+    return LocalPlayer.state.sxScenesBucket or 0
+end
+
+local function inBucket(scene, bucket)
+    return not Config.Buckets.enabled or (scene.bucket or 0) == bucket
+end
+
 function LoadModel(model, timeout)
     local hash = type(model) == 'number' and model or joaat(model)
     if not IsModelInCdimage(hash) or not IsModelValid(hash) then return nil end
@@ -64,11 +72,12 @@ end
 
 local function update()
     local coords = GetEntityCoords(PlayerPedId())
+    local bucket = GetCurrentBucket()
     local seen = {}
 
-    for _, list in ipairs({ localScenes, publicScenes }) do
+    for index, list in ipairs({ localScenes, publicScenes }) do
         for id, scene in pairs(list) do
-            if not seen[id] then
+            if not seen[id] and (index == 1 or inBucket(scene, bucket)) then
                 seen[id] = true
                 local center = scene.center
                 local near = center and #(coords - vector3(center.x, center.y, center.z)) <= Config.Stream.distance
@@ -158,6 +167,13 @@ function SX.Stream:Initialize()
 
     RegisterNetEvent('sxScenes:refresh', function()
         SX.Stream:Refresh()
+    end)
+
+    AddStateBagChangeHandler('sxScenesBucket', nil, function(bagName, _, value)
+        if bagName ~= ('player:%d'):format(GetPlayerServerId(PlayerId())) then return end
+        SetTimeout(0, function()
+            if LocalPlayer.state.sxScenesBucket == value then update() end
+        end)
     end)
 
     AddEventHandler('onResourceStop', function(resource)

@@ -97,6 +97,7 @@ local function toClient(scene)
         props = scene.props,
         group = scene.group and { id = scene.group, name = scene.groupName or scene.group, color = scene.groupColor } or nil,
         territory = scene.territory and { id = scene.territory, label = scene.territoryLabel or scene.territory } or nil,
+        bucket = scene.bucket or 0,
         created = scene.created,
         updated = scene.updated,
         revision = scene.revision,
@@ -215,6 +216,7 @@ function CreateScene(data)
         public = data.public == true and Config.Public.enabled,
         props = props,
         center = center or Utils.ToCoords(data.center) or { x = 0.0, y = 0.0, z = 0.0 },
+        bucket = math.floor(tonumber(data.bucket) or 0),
         created = os.time(),
     }
     applyGroup(scene, data.group)
@@ -257,6 +259,9 @@ function UpdateScene(id, data)
     end
     if data.group ~= nil then
         applyGroup(scene, data.group or nil)
+    end
+    if data.bucket ~= nil then
+        scene.bucket = math.floor(tonumber(data.bucket) or 0)
     end
     if territoryChanged then
         applyTerritory(scene, #props > 0 and GetTerritoryAt(center) or nil)
@@ -332,6 +337,15 @@ end
 
 local function canManage(source, scene)
     return GetScenePermissions(source, scene).edit
+end
+
+local function playerBucket(source)
+    return GetPlayerRoutingBucket(source) or 0
+end
+
+local function inSameBucket(source, scene)
+    if not Config.Buckets.enabled or Bridge.IsAdmin(source) then return true end
+    return playerBucket(source) == (scene.bucket or 0)
 end
 
 local function isNear(source, scene)
@@ -437,7 +451,9 @@ function SX.Scenes:Initialize()
     RegisterServerCallback('sxScenes:getScene', function(source, id)
         local scene = Scenes[id]
         if not scene or not (scene.public or GetScenePermissions(source, scene).view) then return respond(false, 'not_found') end
-        return respond(true, toClient(scene))
+        local data = toClient(scene)
+        data.bypass = Bridge.IsAdmin(source)
+        return respond(true, data)
     end)
 
     playerCallback('sxScenes:create', function(source, label, asGroup)
@@ -451,6 +467,7 @@ function SX.Scenes:Initialize()
             ownerName = Bridge.GetPlayerName(source),
             center = playerCoords(source),
             group = group or nil,
+            bucket = playerBucket(source),
         })
         if not scene then return respond(false, err) end
 
@@ -464,6 +481,7 @@ function SX.Scenes:Initialize()
         if not canManage(source, scene) then return respond(false, 'no_permission') end
         if type(payload) ~= 'table' then return respond(false, 'invalid_data') end
         if not isNear(source, scene) then return respond(false, 'too_far') end
+        if not inSameBucket(source, scene) then return respond(false, 'wrong_instance') end
 
         if scene.public and payload.props ~= nil then
             local props, err, center = SanitizeProps(payload.props)
@@ -520,6 +538,7 @@ function SX.Scenes:Initialize()
             props = Utils.DeepCopy(original.props),
             center = original.center,
             group = group or nil,
+            bucket = playerBucket(source),
         })
         if not scene then return respond(false, err) end
 
@@ -595,7 +614,27 @@ function SX.Scenes:Initialize()
     end)
 end
 
+local function syncBuckets()
+    for _, playerId in ipairs(GetPlayers()) do
+        local source = tonumber(playerId)
+        local bucket = playerBucket(source)
+        local state = Player(source).state
+        if state.sxScenesBucket ~= bucket then
+            state:set('sxScenesBucket', bucket, true)
+        end
+    end
+end
+
 function SX.Scenes:InitializeAsync()
+    if Config.Buckets.enabled then
+        CreateThread(function()
+            while true do
+                syncBuckets()
+                Wait(Config.Buckets.interval)
+            end
+        end)
+    end
+
     Storage.Init()
 
     local count = 0
