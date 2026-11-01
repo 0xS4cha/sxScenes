@@ -45,6 +45,7 @@ AddLanguage("en", {
     error_group_scene_limit = "Your group reached its maximum number of scenes.",
     error_territory_owned = "This territory belongs to another group, only its owner can decorate it.",
     error_wrong_instance = "This scene belongs to another instance.",
+    error_already_editing = "You are already editing a scene.",
     time_just_now = "just now",
     time_minutes_ago = "{n} min ago",
     time_hours_ago = "{n} h ago",

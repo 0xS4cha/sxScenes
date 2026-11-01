@@ -36,8 +36,12 @@ end
 
 function SX.Scenes:Edit(id)
     local scene, err = fetchScene(id)
-    if not scene then return { ok = false, error = err } end
-    if not SX.Editor:Start(scene) then return { ok = false, error = 'too_far' } end
+    local started = false
+    if scene then started, err = SX.Editor:Start(scene) end
+    if not started then
+        Bridge.Notify(GetPhrase('error_' .. tostring(err or 'unknown')), 'error')
+        return { ok = false, error = err }
+    end
     return { ok = true }
 end
 
@@ -89,8 +93,7 @@ function SX.Scenes:Initialize()
         local id = data and data.id
         cb({ ok = true })
         CreateThread(function()
-            local result = SX.Scenes:Edit(id)
-            if not result.ok then Bridge.Notify(GetPhrase('error_' .. tostring(result.error)), 'error') end
+            SX.Scenes:Edit(id)
         end)
     end)
 end

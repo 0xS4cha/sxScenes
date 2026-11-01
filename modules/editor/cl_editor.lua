@@ -257,18 +257,17 @@ function SX.Editor:GetSceneId()
 end
 
 function SX.Editor:Start(scene)
-    if session or type(scene) ~= 'table' then return false end
+    if session then return false, 'already_editing' end
+    if type(scene) ~= 'table' then return false, 'not_found' end
 
     if Config.Buckets.enabled and not scene.bypass and (scene.bucket or 0) ~= GetCurrentBucket() then
-        notifyError('wrong_instance')
-        return false
+        return false, 'wrong_instance'
     end
 
     if scene.props and #scene.props > 0 and scene.center then
         local center = vector3(scene.center.x, scene.center.y, scene.center.z)
         if #(GetEntityCoords(PlayerPedId()) - center) > Config.Limits.editDistance then
-            notifyError('too_far')
-            return false
+            return false, 'too_far'
         end
     end
 

@@ -45,6 +45,7 @@ AddLanguage("fr", {
     error_group_scene_limit = "Votre groupe a atteint son nombre maximum de scènes.",
     error_territory_owned = "Ce territoire appartient à un autre groupe, seul son propriétaire peut le décorer.",
     error_wrong_instance = "Cette scène appartient à une autre instance.",
+    error_already_editing = "Vous modifiez déjà une scène.",
     time_just_now = "à l'instant",
     time_minutes_ago = "il y a {n} min",
     time_hours_ago = "il y a {n} h",
