@@ -22,6 +22,7 @@ local function listScenes()
             center = scene.center,
             props = #scene.props,
             group = scene.group and { id = scene.group, name = scene.groupName or scene.group, color = scene.groupColor } or nil,
+            territory = scene.territory and { id = scene.territory, label = scene.territoryLabel or scene.territory } or nil,
             created = scene.created,
             updated = scene.updated,
         }
@@ -92,6 +93,7 @@ function SX.Admin:Initialize()
                 customModels = Config.Catalog.customModels,
                 everyoneCanCreate = Config.Creator.everyone,
                 groups = Config.Groups.enabled and Bridge.HasIllegals(),
+                territories = Config.Territories.enabled and Bridge.HasIllegals(),
             },
         }
     end)

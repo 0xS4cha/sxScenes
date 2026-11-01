@@ -96,6 +96,7 @@ local function toClient(scene)
         center = scene.center,
         props = scene.props,
         group = scene.group and { id = scene.group, name = scene.groupName or scene.group, color = scene.groupColor } or nil,
+        territory = scene.territory and { id = scene.territory, label = scene.territoryLabel or scene.territory } or nil,
         created = scene.created,
         updated = scene.updated,
         revision = scene.revision,
@@ -169,6 +170,28 @@ local function applyGroup(scene, group)
     end
 end
 
+local function territoriesEnabled()
+    return Config.Territories.enabled and Bridge.HasIllegals()
+end
+
+function GetTerritoryAt(center)
+    if not territoriesEnabled() or not center then return nil end
+    return Bridge.GetTerritoryAt(center)
+end
+
+local function applyTerritory(scene, territory)
+    scene.territory = territory and territory.id or nil
+    scene.territoryLabel = territory and territory.label or nil
+end
+
+function CanPublishInTerritory(source, territory, groupId)
+    if not territory or not territoriesEnabled() or not Config.Territories.requireOwner then return true end
+    if source and Bridge.IsAdmin(source) then return true end
+
+    local owner = Bridge.GetTerritoryOwner(territory.id)
+    return owner == nil or owner == groupId
+end
+
 function CountPublicScenes()
     local count = 0
     for _, scene in pairs(Scenes) do
@@ -195,6 +218,7 @@ function CreateScene(data)
         created = os.time(),
     }
     applyGroup(scene, data.group)
+    applyTerritory(scene, #props > 0 and GetTerritoryAt(scene.center) or nil)
 
     Scenes[scene.id] = scene
     persist(scene)
@@ -215,11 +239,13 @@ function UpdateScene(id, data)
     end
 
     local props, center = scene.props, scene.center
+    local territoryChanged = false
     if data.props ~= nil then
         local err, newCenter
         props, err, newCenter = SanitizeProps(data.props)
         if not props then return nil, err end
         center = newCenter or center
+        territoryChanged = true
     end
 
     local wasPublic = scene.public
@@ -231,6 +257,11 @@ function UpdateScene(id, data)
     end
     if data.group ~= nil then
         applyGroup(scene, data.group or nil)
+    end
+    if territoryChanged then
+        applyTerritory(scene, #props > 0 and GetTerritoryAt(center) or nil)
+    elseif data.territory ~= nil then
+        applyTerritory(scene, data.territory or nil)
     end
 
     persist(scene)
@@ -434,6 +465,14 @@ function SX.Scenes:Initialize()
         if type(payload) ~= 'table' then return respond(false, 'invalid_data') end
         if not isNear(source, scene) then return respond(false, 'too_far') end
 
+        if scene.public and payload.props ~= nil then
+            local props, err, center = SanitizeProps(payload.props)
+            if not props then return respond(false, err) end
+            if center and not CanPublishInTerritory(source, GetTerritoryAt(center), scene.group) then
+                return respond(false, 'territory_owned')
+            end
+        end
+
         local updated, err = UpdateScene(id, { label = payload.label, props = payload.props })
         if not updated then return respond(false, err) end
 
@@ -445,6 +484,9 @@ function SX.Scenes:Initialize()
         local scene = Scenes[id]
         if not scene then return respond(false, 'not_found') end
         if not GetScenePermissions(source, scene).publish then return respond(false, 'no_permission') end
+        if public == true and not CanPublishInTerritory(source, scene.territory and { id = scene.territory } or nil, scene.group) then
+            return respond(false, 'territory_owned')
+        end
 
         local updated = UpdateScene(id, { public = public == true })
         Activity.Add(updated.public and 'scene_published' or 'scene_unpublished', source, { name = updated.label, id = updated.id })
@@ -487,6 +529,54 @@ function SX.Scenes:Initialize()
 
     AddEventHandler('playerDropped', function()
         cooldowns[source] = nil
+    end)
+
+    local function onTerritoryLost(territoryId, previous, nextOwner)
+        if not territoriesEnabled() or not previous then return end
+        Bridge.ClearTerritoryCache()
+
+        territoryId, previous = tostring(territoryId), tostring(previous)
+        local mode = Config.Territories.onLoss
+        if mode == 'keep' then return end
+
+        local affected, label = 0, territoryId
+        for _, scene in pairs(Scenes) do
+            if scene.public and scene.territory == territoryId and scene.group == previous then
+                label = scene.territoryLabel or label
+                affected = affected + 1
+                local newGroup = mode == 'transfer' and nextOwner and Bridge.GetIllegalGroupById(nextOwner)
+                if mode == 'delete' then
+                    DeleteScene(scene.id)
+                elseif newGroup then
+                    UpdateScene(scene.id, { group = newGroup })
+                else
+                    UpdateScene(scene.id, { public = false })
+                end
+            end
+        end
+
+        if affected == 0 then return end
+        local applied = (mode == 'transfer' and not nextOwner) and 'hide' or mode
+        Bridge.SendGroupAlert(previous, GetPhrase('alert_territory_lost_title'), GetPhrase('alert_territory_lost_' .. applied, affected, label))
+        Activity.Add('territory_lost', 0, { territory = label, count = affected, mode = applied })
+    end
+
+    AddEventHandler('sxIllegals:territoryCaptured', function(territoryId, attacker, defender)
+        onTerritoryLost(territoryId, defender, attacker)
+    end)
+
+    AddEventHandler('sxIllegals:territoryLostByDecay', function(territoryId, previousOwner, newOwner)
+        onTerritoryLost(territoryId, previousOwner, newOwner)
+    end)
+
+    AddEventHandler('sxIllegals:territoryDeleted', function(territoryId)
+        Bridge.ClearTerritoryCache()
+        territoryId = tostring(territoryId)
+        for _, scene in pairs(Scenes) do
+            if scene.territory == territoryId then
+                UpdateScene(scene.id, { territory = false })
+            end
+        end
     end)
 
     AddEventHandler('sxIllegals:groupDeleted', function(groupId)

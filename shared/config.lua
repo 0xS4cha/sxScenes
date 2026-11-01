@@ -81,6 +81,12 @@ Config.Groups = {
     onGroupDeleted = 'owner',
 }
 
+Config.Territories = {
+    enabled = true,
+    requireOwner = true,
+    onLoss = 'hide',
+}
+
 Config.ActivityLimit = 100
 
 Config.Webhook = {
@@ -96,5 +102,6 @@ Config.Webhook = {
         admin_delete = true,
         admin_publish = true,
         admin_clear = true,
+        territory_lost = true,
     },
 }
