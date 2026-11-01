@@ -84,6 +84,7 @@ Config.Groups = {
     publishGrade = 1,
     deleteGrade = 0,
     onGroupDeleted = 'owner',
+    rankPermissions = true,
 }
 
 Config.Territories = {

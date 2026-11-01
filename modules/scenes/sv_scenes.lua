@@ -308,8 +308,33 @@ local function groupsEnabled()
 end
 
 local function playerGroup(source)
-    if not groupsEnabled() then return nil, nil end
+    if not groupsEnabled() then return nil, nil, nil end
     return Bridge.GetIllegalGroup(source)
+end
+
+local GROUP_PERMISSIONS = {
+    { key = 'canCreateScenes', grade = 'createGrade' },
+    { key = 'canEditScenes', grade = 'editGrade' },
+    { key = 'canPublishScenes', grade = 'publishGrade' },
+    { key = 'canDeleteScenes', grade = 'deleteGrade' },
+}
+
+local function groupAllowed(grade, perms, key, threshold)
+    if grade == 0 then return true end
+    if Config.Groups.rankPermissions and type(perms) == 'table' and perms[key] ~= nil then
+        return perms[key] == true
+    end
+    return grade <= Config.Groups[threshold]
+end
+
+function RegisterScenePermissions()
+    if not groupsEnabled() or not Config.Groups.rankPermissions then return false end
+
+    local list = {}
+    for _, entry in ipairs(GROUP_PERMISSIONS) do
+        list[#list + 1] = { key = entry.key, label = GetPhrase('group_perm_' .. entry.key) }
+    end
+    return Bridge.RegisterGroupPermissions(list)
 end
 
 function GetScenePermissions(source, scene)
@@ -322,16 +347,16 @@ function GetScenePermissions(source, scene)
         return { view = owner, edit = owner, publish = owner and canPublish(source), delete = owner }
     end
 
-    local group, grade = playerGroup(source)
+    local group, grade, perms = playerGroup(source)
     if not group or group.id ~= scene.group then
         return { view = false, edit = false, publish = false, delete = false }
     end
 
     return {
         view = true,
-        edit = grade <= Config.Groups.editGrade,
-        publish = grade <= Config.Groups.publishGrade and canPublish(source),
-        delete = grade <= Config.Groups.deleteGrade,
+        edit = groupAllowed(grade, perms, 'canEditScenes', 'editGrade'),
+        publish = groupAllowed(grade, perms, 'canPublishScenes', 'publishGrade') and canPublish(source),
+        delete = groupAllowed(grade, perms, 'canDeleteScenes', 'deleteGrade'),
     }
 end
 
@@ -369,14 +394,14 @@ local function withPermissions(source, scene)
 end
 
 local function groupData(source)
-    local group, grade = playerGroup(source)
+    local group, grade, perms = playerGroup(source)
     if not group then return { available = groupsEnabled() } end
 
     return {
         available = true,
         group = group,
         grade = grade,
-        canCreate = grade <= Config.Groups.createGrade and Bridge.CanCreate(source),
+        canCreate = groupAllowed(grade, perms, 'canCreateScenes', 'createGrade') and Bridge.CanCreate(source),
         count = #GetGroupScenes(group.id),
         limit = Config.Groups.scenes,
     }
@@ -425,9 +450,9 @@ local function resolveTarget(source, asGroup)
         return false
     end
 
-    local group, grade = playerGroup(source)
+    local group, grade, perms = playerGroup(source)
     if not group then return nil, 'no_group' end
-    if grade > Config.Groups.createGrade then return nil, 'no_permission' end
+    if not groupAllowed(grade, perms, 'canCreateScenes', 'createGrade') then return nil, 'no_permission' end
     if not Bridge.IsAdmin(source) and #GetGroupScenes(group.id) >= Config.Groups.scenes then return nil, 'group_scene_limit' end
     return group
 end
@@ -588,6 +613,16 @@ function SX.Scenes:Initialize()
         onTerritoryLost(territoryId, previousOwner, newOwner)
     end)
 
+    AddEventHandler('onResourceStart', function(resource)
+        if resource ~= Config.Integrations.sxIllegals then return end
+        Bridge.ResetIllegalsProbes()
+        Bridge.ClearTerritoryCache()
+        CreateThread(function()
+            Wait(2000)
+            RegisterScenePermissions()
+        end)
+    end)
+
     AddEventHandler('sxIllegals:territoryDeleted', function(territoryId)
         Bridge.ClearTerritoryCache()
         territoryId = tostring(territoryId)
@@ -649,5 +684,9 @@ function SX.Scenes:InitializeAsync()
     end
 
     Logger:info('SCENES', ('Loaded %d scene(s)'):format(count))
+
+    if Bridge.HasIllegals() then
+        RegisterScenePermissions()
+    end
     TriggerClientEvent('sxScenes:refresh', -1)
 end

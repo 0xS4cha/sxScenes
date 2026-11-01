@@ -100,6 +100,25 @@ local function callIllegals(name, ...)
     return a, b
 end
 
+local probes = {}
+
+local function probeIllegals(name, ...)
+    if probes[name] ~= nil then return probes[name] end
+    if not Bridge.HasIllegals() then return false end
+
+    local resource = Config.Integrations.sxIllegals
+    local ok = pcall(function(...)
+        local proxy = exports[resource]
+        return proxy[name](proxy, ...)
+    end, ...)
+    probes[name] = ok
+    return ok
+end
+
+function Bridge.ResetIllegalsProbes()
+    probes = {}
+end
+
 local function groupColor(group)
     local rgb = group.rgb or {}
     return ('rgb(%d, %d, %d)'):format(tonumber(rgb.r) or 255, tonumber(rgb.g) or 255, tonumber(rgb.b) or 255)
@@ -114,8 +133,20 @@ function Bridge.GetIllegalGroup(source)
     local group = callIllegals('GetPlayerGroup', source)
     if not group then return nil end
 
-    local grade = callIllegals('GetPlayerGrade', source)
-    return serializeGroup(group), tonumber(grade) or 999
+    local grade = tonumber((callIllegals('GetPlayerGrade', source))) or 999
+    local perms = nil
+    for _, rank in ipairs(group.ranks or {}) do
+        if tonumber(rank.rank) == grade then perms = rank.perms end
+    end
+    return serializeGroup(group), grade, perms
+end
+
+function Bridge.RegisterGroupPermissions(list)
+    if not probeIllegals('GetGroupPermissions') then return false end
+    for _, entry in ipairs(list) do
+        callIllegals('RegisterGroupPermission', entry.key, entry.label)
+    end
+    return true
 end
 
 function Bridge.GetIllegalGroupById(id)
@@ -167,6 +198,7 @@ end
 
 function Bridge.GetTerritoryAt(coords)
     if not coords then return nil end
+
     for _, territory in ipairs(getTerritories()) do
         if isInsidePolygon(coords, territory.coords) then
             return { id = tostring(territory.id), label = territory.label or tostring(territory.id) }
