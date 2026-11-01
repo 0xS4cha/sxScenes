@@ -20,6 +20,13 @@ A prop scene builder for **ESX or standalone** FiveM servers. Players build scen
 - **Translations**: English and French, shared between Lua and the interface.
 - **Exports**: a server and client API, including the gizmo for your other resources.
 
+<div align="center">
+
+![sxScenes](previews/image2.png)
+![sxScenes](previews/image.png)
+
+</div>
+
 ## Dependencies
 
 None are required.
