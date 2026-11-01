@@ -12,6 +12,7 @@ export interface AdminScene {
   props: number
   group?: SceneGroup | null
   territory?: SceneTerritory | null
+  bucket?: number
   created?: number
   updated?: number
 }
@@ -47,6 +48,7 @@ export interface AdminSettings {
   everyoneCanCreate: boolean
   groups: boolean
   territories: boolean
+  buckets: boolean
 }
 
 export interface AdminStats {

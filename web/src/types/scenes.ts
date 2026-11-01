@@ -38,6 +38,7 @@ export interface Scene {
   props: SceneProp[]
   group?: SceneGroup | null
   territory?: SceneTerritory | null
+  bucket?: number
   permissions?: ScenePermissions
   created?: number
   updated?: number

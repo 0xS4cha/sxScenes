@@ -38,6 +38,7 @@ export const MOCK_SCENES: ScenesData = {
     {
       id: 'SCN-7HD3LM',
       label: 'Roadblock Vinewood',
+      bucket: 12,
       ownerName: 'Sacha',
       public: false,
       center: { x: 312.6, y: 167.4, z: 103.8 },

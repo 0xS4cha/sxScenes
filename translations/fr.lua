@@ -81,6 +81,11 @@ AddLanguage("fr", {
     scene_created_by = "par {name}",
     scene_territory_hint = "Seul le groupe qui contrôle ce territoire peut la rendre publique",
     overview_rule_territories = "Décor de territoire",
+    overview_rule_buckets = "Instances",
+    scene_instance = "Instance {n}",
+    scene_instance_hint = "Visible uniquement par les joueurs de cette instance",
+    admin_move_bucket = "Déplacer dans mon instance",
+    notice_scene_moved = "La scène appartient maintenant à votre instance.",
     overview_rule_groups = "Groupes sxIllegals",
     scenes_search = "Rechercher par nom, code ou propriétaire",
     scenes_filter_all = "Toutes",
@@ -202,4 +207,5 @@ AddLanguage("fr", {
     activity_admin_publish = "{player} a changé la visibilité de la scène {name}",
     activity_admin_clear = "{player} a supprimé les {count} scènes de {owner}",
     activity_territory_lost = "{territory} a été perdu, {count} scène(s) publique(s) touchée(s)",
+    activity_admin_bucket = "{player} a déplacé la scène {name} dans l'instance {bucket}",
 })

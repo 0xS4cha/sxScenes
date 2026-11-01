@@ -74,12 +74,14 @@ export function AdminPanel({ openCount }: { openCount: number }) {
                   shown={admin.shown}
                   publicEnabled={admin.settings.publicEnabled}
                   groupsEnabled={admin.settings.groups}
+                  bucketsEnabled={admin.settings.buckets}
                   search={search}
                   onSearch={setSearch}
                   onShow={async (scene, value) => report(await admin.show(scene.id, value))}
                   onEdit={async (scene) => report(await admin.edit(scene.id))}
                   onPublish={async (scene, value) => report(await admin.publish(scene.id, value), value ? 'notice_scene_published' : 'notice_scene_unpublished')}
                   onTeleport={(scene) => admin.teleport(scene.center)}
+                  onMoveBucket={async (scene) => report(await admin.moveBucket(scene.id), 'notice_scene_moved')}
                   onDelete={async (scene) => report(await admin.remove(scene.id), 'notice_scene_deleted')}
                 />
               )}

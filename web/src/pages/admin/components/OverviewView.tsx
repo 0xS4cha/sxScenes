@@ -30,6 +30,7 @@ export function OverviewView({ counts, stats, settings, activity, onSelect }: Ov
     { key: 'overview_rule_custom', enabled: settings.customModels },
     { key: 'overview_rule_groups', enabled: settings.groups },
     { key: 'overview_rule_territories', enabled: settings.territories },
+    { key: 'overview_rule_buckets', enabled: settings.buckets },
   ]
 
   return (

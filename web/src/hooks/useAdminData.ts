@@ -28,6 +28,7 @@ const EMPTY: AdminData = {
     everyoneCanCreate: false,
     groups: false,
     territories: false,
+    buckets: false,
   },
 }
 
@@ -108,6 +109,15 @@ export function useAdminData(openCount: number) {
     return result
   }, [refresh])
 
+  const moveBucket = useCallback(async (id: string) => {
+    const result = await nuiAction<{ bucket: number }>('adminMoveBucket', { id })
+    if (result.ok) {
+      const bucket = result.data?.bucket ?? 0
+      setData((prev) => ({ ...prev, scenes: prev.scenes.map((scene) => (scene.id === id ? { ...scene, bucket } : scene)) }))
+    }
+    return result
+  }, [])
+
   const show = useCallback(async (id: string, value: boolean) => {
     const result = await nuiAction('sceneShow', { id, shown: value })
     if (result.ok) setData((prev) => ({ ...prev, shown: value ? [...prev.shown, id] : prev.shown.filter((s) => s !== id) }))
@@ -117,5 +127,5 @@ export function useAdminData(openCount: number) {
   const edit = useCallback((id: string) => nuiAction('sceneEdit', { id }), [])
   const teleport = useCallback((coords: Vec3) => void fetchNui('teleport', coords), [])
 
-  return { ...data, loading, refresh, publish, remove, clearOwner, show, edit, teleport }
+  return { ...data, loading, refresh, publish, remove, clearOwner, moveBucket, show, edit, teleport }
 }

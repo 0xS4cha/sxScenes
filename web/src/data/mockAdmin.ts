@@ -20,10 +20,11 @@ export const MOCK_ADMIN: AdminData = {
     everyoneCanCreate: true,
     groups: true,
     territories: true,
+    buckets: true,
   },
   scenes: [
     { id: 'SCN-K2P9QA', label: 'Beach party', owner: 'license:2f4c9a', ownerName: 'Sacha', public: true, center: { x: -1385.4, y: -1388.2, z: 3.9 }, props: 12, created: now - 86400 * 3, updated: now - 3600 },
-    { id: 'SCN-7HD3LM', label: 'Roadblock Vinewood', owner: 'license:2f4c9a', ownerName: 'Sacha', public: false, center: { x: 312.6, y: 167.4, z: 103.8 }, props: 6, created: now - 86400, updated: now - 600 },
+    { id: 'SCN-7HD3LM', label: 'Roadblock Vinewood', owner: 'license:2f4c9a', ownerName: 'Sacha', public: false, center: { x: 312.6, y: 167.4, z: 103.8 }, props: 6, bucket: 12, created: now - 86400, updated: now - 600 },
     { id: 'SCN-P0QW8E', label: 'Car meet LS Docks', owner: 'license:8b1e77', ownerName: 'Nova', public: true, center: { x: 1003.2, y: -2931.8, z: 5.9 }, props: 9, group: { id: '3', name: 'Ballas', color: 'rgb(147, 51, 234)' }, territory: { id: '2', label: 'Port of Los Santos' }, created: now - 7200, updated: now - 7200 },
   ],
   players: [

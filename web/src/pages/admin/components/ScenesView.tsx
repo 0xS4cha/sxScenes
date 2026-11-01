@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Box, Eye, EyeOff, Flag, Globe, Layers, Lock, MapPin, Pencil, Trash2, User, Users } from 'lucide-react'
+import { Box, Boxes, Eye, EyeOff, Flag, Globe, Layers, Lock, MapPin, Pencil, Trash2, User, Users } from 'lucide-react'
 import { Badge, EmptyState, IconButton } from '../../../components/ui'
 import { useConfirm } from '../../../hooks/useConfirm'
 import { useTranslation } from '../../../hooks/useTranslation'
@@ -14,16 +14,18 @@ interface ScenesViewProps {
   shown: string[]
   publicEnabled: boolean
   groupsEnabled: boolean
+  bucketsEnabled: boolean
   search: string
   onSearch: (value: string) => void
   onShow: (scene: AdminScene, value: boolean) => void
   onEdit: (scene: AdminScene) => void
   onPublish: (scene: AdminScene, value: boolean) => void
   onTeleport: (scene: AdminScene) => void
+  onMoveBucket: (scene: AdminScene) => void
   onDelete: (scene: AdminScene) => void
 }
 
-export function ScenesView({ scenes, shown, publicEnabled, groupsEnabled, search, onSearch, onShow, onEdit, onPublish, onTeleport, onDelete }: ScenesViewProps) {
+export function ScenesView({ scenes, shown, publicEnabled, groupsEnabled, bucketsEnabled, search, onSearch, onShow, onEdit, onPublish, onTeleport, onMoveBucket, onDelete }: ScenesViewProps) {
   const { t } = useTranslation()
   const confirm = useConfirm<string>()
   const [filter, setFilter] = useState<Filter>('all')
@@ -82,6 +84,7 @@ export function ScenesView({ scenes, shown, publicEnabled, groupsEnabled, search
                   )}
                   <Badge tone="violet" icon={<User className="h-3 w-3" />} title={scene.owner}>{scene.ownerName}</Badge>
                   {scene.territory && <Badge tone="warning" icon={<Flag className="h-3 w-3" />}>{scene.territory.label}</Badge>}
+                  {bucketsEnabled && Boolean(scene.bucket) && <Badge icon={<Boxes className="h-3 w-3" />}>{t('scene_instance', { n: scene.bucket ?? 0 })}</Badge>}
                   <Badge icon={<Box className="h-3 w-3" />}>{t('scene_props_count', { n: scene.props })}</Badge>
                   {isShown && <Badge tone="success" icon={<Eye className="h-3 w-3" />}>{t('scene_shown')}</Badge>}
                 </div>
@@ -101,6 +104,7 @@ export function ScenesView({ scenes, shown, publicEnabled, groupsEnabled, search
                       </IconButton>
                     )}
                     <IconButton onClick={() => onTeleport(scene)} title={t('btn_teleport')}><MapPin className="h-3.5 w-3.5" /></IconButton>
+                    {bucketsEnabled && <IconButton onClick={() => onMoveBucket(scene)} title={t('admin_move_bucket')}><Boxes className="h-3.5 w-3.5" /></IconButton>}
                     <button
                       type="button"
                       onClick={() => confirm.request(scene.id, () => onDelete(scene))}
