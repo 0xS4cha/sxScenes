@@ -113,6 +113,7 @@ Everything lives in `shared/config.lua`.
 | `Config.Groups.publishGrade` | `1` | Highest rank allowed to make them public or private |
 | `Config.Groups.deleteGrade` | `0` | Highest rank allowed to delete them |
 | `Config.Groups.onGroupDeleted` | `'owner'` | `'owner'` gives the scenes back to their creator as private scenes, `'delete'` removes them |
+| `Config.Groups.rankPermissions` | `true` | Adds `canCreateScenes`, `canEditScenes`, `canPublishScenes` and `canDeleteScenes` to the ranks of the sxIllegals group panel. A rank that never had the permission set falls back to the grades above |
 | `Config.Territories.enabled` | `true` | Ties the scenes to the territory their center stands in |
 | `Config.Territories.requireOwner` | `true` | Only the group controlling a territory can make a scene public in it. Unclaimed territories stay open |
 | `Config.Territories.onLoss` | `'hide'` | What happens to the public scenes of a group losing a territory: `'hide'`, `'transfer'`, `'delete'` or `'keep'` |
@@ -156,7 +157,7 @@ translations/   Language files, used by Lua and by the interface
 web/            React, TypeScript and Tailwind interface
 ```
 
-With sxIllegals, a scene either belongs to its creator or to a group. Permissions of group scenes are read live from the sxIllegals ranks, so a kicked member loses access at once. The territory of a scene is computed from its center every time its props are saved, and the public scenes of a territory follow the `sxIllegals:territoryCaptured` and `sxIllegals:territoryLostByDecay` events.
+With sxIllegals, a scene either belongs to its creator or to a group. Permissions of group scenes are read live from the sxIllegals ranks, so a kicked member loses access at once. With a recent sxIllegals, the leader grants them rank by rank from the group panel; with an older one, the grades of `Config.Groups` apply. The territory of a scene is computed from its center every time its props are saved, and every scene is checked again when sxScenes or sxIllegals starts and when a territory is created or reshaped. The public scenes of a territory follow the `sxIllegals:territoryCaptured` and `sxIllegals:territoryLostByDecay` events.
 
 The routing bucket of every player is copied into the `sxScenesBucket` state bag, so the clients only spawn the public scenes of their own instance. A scene can only be saved from its instance, except by admins.
 
