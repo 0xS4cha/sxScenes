@@ -1,4 +1,4 @@
-import { Copy, Eye, EyeOff, Globe, Lock, Pencil, Trash2 } from 'lucide-react'
+import { Copy, Eye, EyeOff, Globe, Lock, Pencil, Trash2, Users } from 'lucide-react'
 import { Badge, IconButton } from '../../../components/ui'
 import { useTranslation } from '../../../hooks/useTranslation'
 import type { Scene } from '../../../types/scenes'
@@ -19,6 +19,7 @@ interface SceneCardProps {
 
 export function SceneCard({ scene, shown, canPublish, sharing, confirmPending, onShow, onEdit, onPublish, onDelete, onCopied }: SceneCardProps) {
   const { t } = useTranslation()
+  const permissions = scene.permissions ?? { view: true, edit: true, publish: canPublish, delete: true }
 
   return (
     <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-3.5 transition hover:border-zinc-700 hover:bg-zinc-900/60">
@@ -53,7 +54,14 @@ export function SceneCard({ scene, shown, canPublish, sharing, confirmPending, o
       </div>
 
       <p className="mt-2 text-[11px] text-zinc-400">
+        {scene.group && (
+          <span className="mr-1.5 inline-flex items-center gap-1 font-semibold" style={{ color: scene.group.color }}>
+            <Users className="h-3 w-3" />
+            {scene.group.name} ·
+          </span>
+        )}
         {t('scene_props_count', { n: scene.props.length })}
+        {scene.group && ` · ${t('scene_created_by', { name: scene.ownerName })}`}
         {scene.updated ? ` · ${t('scene_updated', { time: formatRelativeTime(scene.updated, t) })}` : ''}
       </p>
 
@@ -61,7 +69,8 @@ export function SceneCard({ scene, shown, canPublish, sharing, confirmPending, o
         <button
           type="button"
           onClick={onEdit}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition hover:border-zinc-600 hover:text-white"
+          disabled={!permissions.edit}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-xs font-semibold text-zinc-300 transition hover:border-zinc-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Pencil className="h-3.5 w-3.5" />
           {t('btn_edit')}
@@ -70,7 +79,7 @@ export function SceneCard({ scene, shown, canPublish, sharing, confirmPending, o
           <IconButton onClick={() => onShow(!shown)} title={shown ? t('scene_hide') : t('scene_show')}>
             {shown ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
           </IconButton>
-          {canPublish && (
+          {permissions.publish && (
             <IconButton onClick={() => onPublish(!scene.public)} title={scene.public ? t('scene_unpublish') : t('scene_publish')} className={scene.public ? 'text-sky-400' : ''}>
               <Globe className="h-3.5 w-3.5" />
             </IconButton>
@@ -78,7 +87,8 @@ export function SceneCard({ scene, shown, canPublish, sharing, confirmPending, o
           <button
             type="button"
             onClick={onDelete}
-            className={`flex h-7 items-center justify-center gap-1 rounded-md px-2 text-[11px] font-semibold transition ${confirmPending ? 'bg-rose-500/15 text-rose-300' : 'text-zinc-400 hover:bg-rose-500/10 hover:text-rose-400'}`}
+            disabled={!permissions.delete}
+            className={`flex h-7 disabled:cursor-not-allowed disabled:opacity-40 items-center justify-center gap-1 rounded-md px-2 text-[11px] font-semibold transition ${confirmPending ? 'bg-rose-500/15 text-rose-300' : 'text-zinc-400 hover:bg-rose-500/10 hover:text-rose-400'}`}
           >
             <Trash2 className="h-3.5 w-3.5" />
             {confirmPending && t('btn_confirm_delete')}

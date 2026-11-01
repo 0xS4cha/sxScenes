@@ -17,6 +17,7 @@ const EMPTY: ScenesData = {
   limits: { scenes: 0, props: 0, radius: 0, labelLength: 40 },
   shown: [],
   editing: null,
+  groups: { available: false },
 }
 
 function normalize(data: ScenesData): ScenesData {
@@ -26,6 +27,7 @@ function normalize(data: ScenesData): ScenesData {
     scenes: toArray(data.scenes).map((scene) => ({ ...scene, props: toArray(scene.props) })),
     shown: toArray(data.shown),
     limits: { ...EMPTY.limits, ...data.limits },
+    groups: { ...EMPTY.groups, ...data.groups },
   }
 }
 
@@ -52,19 +54,28 @@ export function useScenesData(openCount: number) {
 
   const mutate = useCallback((update: (prev: ScenesData) => ScenesData) => setData((prev) => update(prev)), [])
 
-  const create = useCallback(async (label: string) => {
-    const result = await nuiAction<Scene>('sceneCreate', { label })
+  const create = useCallback(async (label: string, group: boolean) => {
+    const result = await nuiAction<Scene>('sceneCreate', { label, group })
     if (result.ok) {
       if (isEnvBrowser()) {
-        const scene: Scene = { id: `SCN-${Date.now().toString(36).toUpperCase().slice(-6)}`, label, ownerName: 'Sacha', public: false, center: { x: 0, y: 0, z: 0 }, props: [] }
+        const scene: Scene = {
+          id: `SCN-${Date.now().toString(36).toUpperCase().slice(-6)}`,
+          label,
+          ownerName: 'Sacha',
+          public: false,
+          center: { x: 0, y: 0, z: 0 },
+          props: [],
+          group: group ? data.groups.group : null,
+          permissions: { view: true, edit: true, publish: true, delete: true },
+        }
         mutate((prev) => ({ ...prev, scenes: [...prev.scenes, scene] }))
       } else void refresh()
     }
     return result
-  }, [mutate, refresh])
+  }, [mutate, refresh, data.groups.group])
 
-  const importScene = useCallback(async (code: string) => {
-    const result = await nuiAction<Scene>('sceneImport', { code })
+  const importScene = useCallback(async (code: string, group: boolean) => {
+    const result = await nuiAction<Scene>('sceneImport', { code, group })
     if (result.ok) void refresh()
     return result
   }, [refresh])

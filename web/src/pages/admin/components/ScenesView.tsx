@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Box, Eye, EyeOff, Globe, Layers, Lock, MapPin, Pencil, Trash2, User } from 'lucide-react'
+import { Box, Eye, EyeOff, Globe, Layers, Lock, MapPin, Pencil, Trash2, User, Users } from 'lucide-react'
 import { Badge, EmptyState, IconButton } from '../../../components/ui'
 import { useConfirm } from '../../../hooks/useConfirm'
 import { useTranslation } from '../../../hooks/useTranslation'
@@ -7,12 +7,13 @@ import type { AdminScene } from '../../../types/admin'
 import { formatCoords, formatRelativeTime } from '../../../utils/format'
 import { SearchBar } from './SearchBar'
 
-type Filter = 'all' | 'public' | 'private'
+type Filter = 'all' | 'public' | 'private' | 'group'
 
 interface ScenesViewProps {
   scenes: AdminScene[]
   shown: string[]
   publicEnabled: boolean
+  groupsEnabled: boolean
   search: string
   onSearch: (value: string) => void
   onShow: (scene: AdminScene, value: boolean) => void
@@ -22,7 +23,7 @@ interface ScenesViewProps {
   onDelete: (scene: AdminScene) => void
 }
 
-export function ScenesView({ scenes, shown, publicEnabled, search, onSearch, onShow, onEdit, onPublish, onTeleport, onDelete }: ScenesViewProps) {
+export function ScenesView({ scenes, shown, publicEnabled, groupsEnabled, search, onSearch, onShow, onEdit, onPublish, onTeleport, onDelete }: ScenesViewProps) {
   const { t } = useTranslation()
   const confirm = useConfirm<string>()
   const [filter, setFilter] = useState<Filter>('all')
@@ -31,8 +32,9 @@ export function ScenesView({ scenes, shown, publicEnabled, search, onSearch, onS
   const filtered = scenes.filter((scene) => {
     if (filter === 'public' && !scene.public) return false
     if (filter === 'private' && scene.public) return false
+    if (filter === 'group' && !scene.group) return false
     if (!query) return true
-    return [scene.label, scene.id, scene.ownerName, scene.owner].some((value) => value?.toLowerCase().includes(query))
+    return [scene.label, scene.id, scene.ownerName, scene.owner, scene.group?.name].some((value) => value?.toLowerCase().includes(query))
   })
 
   return (
@@ -42,7 +44,7 @@ export function ScenesView({ scenes, shown, publicEnabled, search, onSearch, onS
           <SearchBar value={search} onChange={onSearch} placeholder={t('scenes_search')} />
         </div>
         <div className="flex gap-1 rounded-lg border border-zinc-800 bg-zinc-900/60 p-1">
-          {(['all', 'public', 'private'] as const).map((id) => (
+          {(['all', 'public', 'private', ...(groupsEnabled ? ['group' as const] : [])] as Filter[]).map((id) => (
             <button
               key={id}
               type="button"
@@ -72,6 +74,12 @@ export function ScenesView({ scenes, shown, publicEnabled, search, onSearch, onS
                 </div>
                 <div className="mt-3 flex min-h-[22px] flex-wrap gap-1.5">
                   {scene.public ? <Badge tone="info" icon={<Globe className="h-3 w-3" />}>{t('scene_public')}</Badge> : <Badge icon={<Lock className="h-3 w-3" />}>{t('scene_private')}</Badge>}
+                  {scene.group && (
+                    <span className="inline-flex items-center gap-1 rounded-md border border-zinc-700 bg-zinc-800/80 px-1.5 py-0.5 text-[10px] font-semibold" style={{ color: scene.group.color }}>
+                      <Users className="h-3 w-3" />
+                      {scene.group.name}
+                    </span>
+                  )}
                   <Badge tone="violet" icon={<User className="h-3 w-3" />} title={scene.owner}>{scene.ownerName}</Badge>
                   <Badge icon={<Box className="h-3 w-3" />}>{t('scene_props_count', { n: scene.props })}</Badge>
                   {isShown && <Badge tone="success" icon={<Eye className="h-3 w-3" />}>{t('scene_shown')}</Badge>}

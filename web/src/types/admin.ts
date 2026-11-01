@@ -1,4 +1,4 @@
-import type { Vec3 } from './scenes'
+import type { SceneGroup, Vec3 } from './scenes'
 
 export type AdminCategory = 'overview' | 'scenes' | 'players' | 'activity'
 
@@ -10,6 +10,7 @@ export interface AdminScene {
   public: boolean
   center: Vec3
   props: number
+  group?: SceneGroup | null
   created?: number
   updated?: number
 }
@@ -43,6 +44,7 @@ export interface AdminSettings {
   sharing: boolean
   customModels: boolean
   everyoneCanCreate: boolean
+  groups: boolean
 }
 
 export interface AdminStats {

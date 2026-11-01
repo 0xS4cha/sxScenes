@@ -11,6 +11,19 @@ export interface SceneProp {
   collision?: boolean
 }
 
+export interface SceneGroup {
+  id: string
+  name: string
+  color?: string
+}
+
+export interface ScenePermissions {
+  view: boolean
+  edit: boolean
+  publish: boolean
+  delete: boolean
+}
+
 export interface Scene {
   id: string
   label: string
@@ -18,8 +31,19 @@ export interface Scene {
   public: boolean
   center: Vec3
   props: SceneProp[]
+  group?: SceneGroup | null
+  permissions?: ScenePermissions
   created?: number
   updated?: number
+}
+
+export interface GroupsData {
+  available: boolean
+  group?: SceneGroup
+  grade?: number
+  canCreate?: boolean
+  count?: number
+  limit?: number
 }
 
 export interface SceneLimits {
@@ -40,6 +64,7 @@ export interface ScenesData {
   customModels: boolean
   shown: string[]
   editing?: string | null
+  groups: GroupsData
 }
 
 export interface EditorProp {

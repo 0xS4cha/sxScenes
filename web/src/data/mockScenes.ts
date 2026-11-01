@@ -12,6 +12,14 @@ export const MOCK_SCENES: ScenesData = {
   limits: { scenes: 5, props: 50, radius: 40, labelLength: 40 },
   shown: ['SCN-K2P9QA'],
   editing: null,
+  groups: {
+    available: true,
+    group: { id: '3', name: 'Ballas', color: 'rgb(147, 51, 234)' },
+    grade: 1,
+    canCreate: true,
+    count: 1,
+    limit: 5,
+  },
   scenes: [
     {
       id: 'SCN-K2P9QA',
@@ -39,6 +47,20 @@ export const MOCK_SCENES: ScenesData = {
       ],
       created: now - 86400,
       updated: now - 600,
+    },
+    {
+      id: 'SCN-B4LL4S',
+      label: 'Grove Street tags',
+      ownerName: 'Nova',
+      public: true,
+      center: { x: 85.2, y: -1959.4, z: 21.1 },
+      group: { id: '3', name: 'Ballas', color: 'rgb(147, 51, 234)' },
+      permissions: { view: true, edit: true, publish: true, delete: false },
+      props: [
+        { model: 'prop_rub_couch01', coords: { x: 85.2, y: -1959.4, z: 21.1 }, rotation: { x: 0, y: 0, z: 0 } },
+      ],
+      created: now - 86400 * 2,
+      updated: now - 7200,
     },
   ],
 }

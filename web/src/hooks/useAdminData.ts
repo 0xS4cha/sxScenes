@@ -26,6 +26,7 @@ const EMPTY: AdminData = {
     sharing: false,
     customModels: false,
     everyoneCanCreate: false,
+    groups: false,
   },
 }
 

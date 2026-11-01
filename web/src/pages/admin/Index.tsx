@@ -73,6 +73,7 @@ export function AdminPanel({ openCount }: { openCount: number }) {
                   scenes={admin.scenes}
                   shown={admin.shown}
                   publicEnabled={admin.settings.publicEnabled}
+                  groupsEnabled={admin.settings.groups}
                   search={search}
                   onSearch={setSearch}
                   onShow={async (scene, value) => report(await admin.show(scene.id, value))}

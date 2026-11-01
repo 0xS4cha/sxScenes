@@ -28,6 +28,7 @@ export function OverviewView({ counts, stats, settings, activity, onSelect }: Ov
     { key: 'overview_rule_players_publish', enabled: settings.publicEnabled && settings.playersCanPublish },
     { key: 'overview_rule_sharing', enabled: settings.sharing },
     { key: 'overview_rule_custom', enabled: settings.customModels },
+    { key: 'overview_rule_groups', enabled: settings.groups },
   ]
 
   return (
